@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "labtracker"
+version = "0.1.0"
+description = ""
+authors = ["Дмитрий Чанков <chankovbelka123@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.98.0"
+sqlalchemy = "^2.0.17"
+python-dotenv = "^1.0.0"
+alembic = "^1.11.1"
+fastapi-users = "^11.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
