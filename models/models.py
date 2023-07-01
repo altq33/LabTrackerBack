@@ -10,7 +10,7 @@ metadata = MetaData()
 
 
 class User(Base):
-	__tablename__ = 'users'
+	__tablename__ = 'user'
 	metadata = metadata
 	email: Mapped[str] = mapped_column(
 		String(length=320), unique=True, index=True, nullable=False
