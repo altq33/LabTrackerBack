@@ -1,30 +1,37 @@
+import uuid
 from datetime import datetime
-
-from sqlalchemy import MetaData, Integer, String, TIMESTAMP, Column, Boolean
+from sqlalchemy import MetaData, String, TIMESTAMP, Column, UUID
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeMeta, sessionmaker
 
-Base = declarative_base()
+from config import settings
+
+DATABASE_URL = f"postgresql+asyncpg://{settings.db_user}:{settings.db_pass}@{settings.db_host}:{settings.db_port}/\
+{settings.db_name}"
+Base: DeclarativeMeta = declarative_base()
+
+engine: AsyncEngine = create_async_engine(DATABASE_URL, future=True, echo=True)
+async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 metadata = MetaData()
 
 
+async def get_session() -> AsyncSession:
+	async with async_session() as session:
+		yield session
+
+
 class User(Base):
-	__tablename__ = 'user'
+	__tablename__ = 'users'
+
+	id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
 	metadata = metadata
-	email: Mapped[str] = mapped_column(
+	email = Column(
 		String(length=320), unique=True, index=True, nullable=False
 	)
-	hashed_password: Mapped[str] = mapped_column(
+	hashed_password = Column(
 		String(length=1024), nullable=False
 	)
-	is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-	is_superuser: Mapped[bool] = mapped_column(
-		Boolean, default=False, nullable=False
-	)
-	is_verified: Mapped[bool] = mapped_column(
-		Boolean, default=False, nullable=False
-	)
-	id = Column(Integer, primary_key=True, index=True)
 	username = Column(String, unique=True, nullable=False)
 	created = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)

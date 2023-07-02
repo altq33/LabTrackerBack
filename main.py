@@ -1,32 +1,46 @@
-from fastapi import FastAPI
-from fastapi_users import fastapi_users, FastAPIUsers
-from auth.auth import auth_backend
-from auth.database import User
-from auth.manager import get_user_manager
-from auth.schemas import UserRead, UserCreate
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel, EmailStr
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeMeta, declarative_base
 from config import settings
-
-fastapi_users_lib = FastAPIUsers[User, int](
-    get_user_manager,
-    [auth_backend],
-)
+from models.models import User, async_session, get_session
 
 app = FastAPI(title="LabTracker")
 
-app.include_router(
-    fastapi_users_lib.get_auth_router(auth_backend),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users_lib.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
+
+class UserDAL:
+	def __init__(self, db_session: AsyncSession):
+		self.db_session = db_session
+
+	async def create_user(self, username: str, email: str, password: str) -> User:
+		new_user = User(
+			username=username,
+			email=email,
+			hashed_password=password
+		)
+		self.db_session.add(new_user)
+		await self.db_session.flush()
+		await self.db_session.commit()
+		return new_user
 
 
 @app.get("/")
 async def root():
-    return {'status': 200, 'message': "Server is OK", 'settings': settings}
+	return {'status': 200, 'message': "Server is OK", 'settings': settings}
 
 
+class CreateUser(BaseModel):
+	username: str
+	email: EmailStr
+	password: str
+
+
+@app.post("/reg")
+async def registration(user: CreateUser, session: AsyncSession = Depends(get_session)):
+	user_dal = UserDAL(session)
+	new_user = await user_dal.create_user(
+		username=user.username,
+		email=user.email,
+		password=user.password
+	)
+	return {'user': new_user}
