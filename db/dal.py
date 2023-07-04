@@ -24,5 +24,9 @@ class UserDAL:
         return new_user
 
     async def delete_user(self, user_id: UUID) -> UUID | None:
-        query = delete(User).where(User.id == user_id).returning(User)
+        query = delete(User).where(User.id == user_id).returning(User.id)
         res = await self.db_session.execute(query)
+        await self.db_session.commit()
+        deleted_user_row = res.fetchone()
+        if deleted_user_row:
+            return deleted_user_row[0]
