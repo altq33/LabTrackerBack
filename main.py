@@ -1,46 +1,30 @@
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel, EmailStr
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeMeta, declarative_base
+from fastapi import FastAPI, Depends, APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
-from models.models import User, async_session, get_session
+from db.dal import UserDAL
+from db.models import User
+from db.session import get_session
+from models.models import CreateUser
 
-app = FastAPI(title="LabTracker")
+app = FastAPI(title="LabTracker",
+              description="An application for tracking labs, term papers and essays for students")
 
+main_api_router = APIRouter()
 
-class UserDAL:
-	def __init__(self, db_session: AsyncSession):
-		self.db_session = db_session
-
-	async def create_user(self, username: str, email: str, password: str) -> User:
-		new_user = User(
-			username=username,
-			email=email,
-			hashed_password=password
-		)
-		self.db_session.add(new_user)
-		await self.db_session.flush()
-		await self.db_session.commit()
-		return new_user
+auth_api_router = APIRouter()
 
 
 @app.get("/")
 async def root():
-	return {'status': 200, 'message': "Server is OK", 'settings': settings}
-
-
-class CreateUser(BaseModel):
-	username: str
-	email: EmailStr
-	password: str
+    return {'status': 200, 'message': "Server is OK", 'settings': settings}
 
 
 @app.post("/reg")
 async def registration(user: CreateUser, session: AsyncSession = Depends(get_session)):
-	user_dal = UserDAL(session)
-	new_user = await user_dal.create_user(
-		username=user.username,
-		email=user.email,
-		password=user.password
-	)
-	return {'user': new_user}
+    user_dal = UserDAL(session)
+    new_user = await user_dal.create_user(
+        username=user.username,
+        email=user.email,
+        password=user.password
+    )
+    return {'user': new_user}
