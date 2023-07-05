@@ -4,8 +4,8 @@ from sqlalchemy import String, TIMESTAMP, Column, UUID
 
 from db.session import Base, metadata
 
-
 """Модели алхимии"""
+
 
 class User(Base):
     __tablename__ = 'users'

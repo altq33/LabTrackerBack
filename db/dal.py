@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import update, delete
+from sqlalchemy import update, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import User
@@ -30,3 +30,18 @@ class UserDAL:
         deleted_user_row = res.fetchone()
         if deleted_user_row:
             return deleted_user_row[0]
+
+    async def get_user_by_id(self, user_id: UUID) -> User | None:
+        query = select(User).where(User.id == user_id)
+        res = await self.db_session.execute(query)
+        user_row = res.fetchone()
+        if user_row:
+            return user_row[0]
+
+    async def update_user(self, user_id: UUID,  **kwargs) -> UUID | None:
+        query = update(User).where(User.id == user_id).values(kwargs).returning(User.id)
+        res = await self.db_session.execute(query)
+        await self.db_session.commit()
+        updated_user_row = res.fetchone()
+        if updated_user_row:
+            return updated_user_row[0]

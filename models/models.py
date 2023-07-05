@@ -31,3 +31,12 @@ class ShowUser(BaseModel):
 
 class ShowDeletedUser(BaseModel):
     id: UUID
+
+
+class ShowUpdatedUser(BaseModel):
+    id: UUID
+
+
+class UpdateUserRequest(BaseModel):
+    username: str | None
+    email: EmailStr | None
