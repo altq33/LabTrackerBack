@@ -1,14 +1,11 @@
 from fastapi import FastAPI, APIRouter
 
-from api.endpoints import user_router
+from src.auth.router import router as auth_router
 
 app = FastAPI(title="LabTracker",
               description="An application for tracking labs, term papers and essays for students")
 
-main_router = APIRouter()
-
-main_router.include_router(user_router)
-app.include_router(main_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

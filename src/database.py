@@ -4,10 +4,10 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeMeta, declarative_base
 
-from config import settings
+from src.config import settings
 
 
-"""Создание сессии с дб и функция для DI"""
+"""Creating DB session and function for DI"""
 
 DATABASE_URL = f"postgresql+asyncpg://{settings.db_user}:{settings.db_pass}@{settings.db_host}:{settings.db_port}/\
 {settings.db_name}"

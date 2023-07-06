@@ -2,9 +2,9 @@ import uuid
 from datetime import datetime
 from sqlalchemy import String, TIMESTAMP, Column, UUID
 
-from db.session import Base, metadata
+from src.database import Base, metadata
 
-"""Модели алхимии"""
+"""DB MODELS"""
 
 
 class User(Base):
