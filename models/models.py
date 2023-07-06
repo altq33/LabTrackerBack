@@ -13,13 +13,12 @@ class CreateUser(BaseModel):
 
     class Config:
         schema_extra = {
-            "example": [
+            "example    ":
                 {
                  "username": "Faker",
                  "email": "thebestmidlaner@gmail.com",
                  "password": "T1letmeout1234"
-                 }
-            ]
+                }
         }
 
 

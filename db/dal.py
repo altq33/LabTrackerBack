@@ -4,6 +4,7 @@ from sqlalchemy import update, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import User
+from utils.hasher import Hasher
 
 """Слой доступа к БД"""
 
@@ -16,7 +17,7 @@ class UserDAL:
         new_user = User(
             username=username,
             email=email,
-            hashed_password=password
+            hashed_password=Hasher.get_hashed_password(password)
         )
         self.db_session.add(new_user)
         await self.db_session.flush()

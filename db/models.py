@@ -9,9 +9,9 @@ from db.session import Base, metadata
 
 class User(Base):
     __tablename__ = 'users'
+    metadata = metadata
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    metadata = metadata
     email = Column(
         String(length=320), unique=True, index=True, nullable=False
     )
