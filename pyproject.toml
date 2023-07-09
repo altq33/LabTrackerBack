@@ -12,6 +12,8 @@ sqlalchemy = "^2.0.17"
 python-dotenv = "^1.0.0"
 alembic = "^1.11.1"
 fastapi-users = "^11.0.0"
+python-multipart = "^0.0.6"
+python-jose = "^3.3.0"
 
 
 [build-system]

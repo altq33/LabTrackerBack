@@ -10,6 +10,8 @@ class Settings(BaseSettings):
 	db_user: str
 	db_pass: str
 	secret: str
+	algorithm: str
+	access_token_expire_minutes: int
 
 	class Config:
 		env_file = ".env"

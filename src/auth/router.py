@@ -1,17 +1,22 @@
+from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Body, HTTPException
+from fastapi import APIRouter, Depends, Body, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.service import create_new_user, delete_user_by_id, get_user_by_id, update_user
+from src.auth.schemas import CreateUser, ShowUser, ShowDeletedUser, ShowUpdatedUser, UpdateUserRequest, Token
+from src.auth.service import create_new_user, delete_user_by_id, get_user_by_id, update_user, authenticate_user, \
+    get_current_user
+from src.auth.utils import create_access_token
+from src.config import settings
 from src.database import get_session
-from src.auth.schemas import CreateUser, ShowUser, ShowDeletedUser, ShowUpdatedUser, UpdateUserRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/registration", response_model=ShowUser)
+@router.post("/", response_model=ShowUser)
 async def registration(user: Annotated[CreateUser, Body(title='Registration body')],
                        session: AsyncSession = Depends(get_session)) -> ShowUser:
     return await create_new_user(user, session)
@@ -34,7 +39,8 @@ async def get_user(user_id: UUID, session: AsyncSession = Depends(get_session)) 
 
 
 @router.patch("/{user_id}", response_model=ShowUpdatedUser)
-async def update_user_by_id(user_id: UUID, body: UpdateUserRequest, session: AsyncSession = Depends(get_session)) -> ShowUpdatedUser:
+async def update_user_by_id(user_id: UUID, body: UpdateUserRequest, session: AsyncSession = Depends(get_session)) \
+        -> ShowUpdatedUser:
     if body.dict(exclude_none=True) == {}:
         raise HTTPException(status_code=422, detail="At least one parameter for updating must be passed")
     user = await get_user_by_id(user_id, session)
@@ -42,3 +48,25 @@ async def update_user_by_id(user_id: UUID, body: UpdateUserRequest, session: Asy
         raise HTTPException(status_code=404, detail=f"User with {user_id} id NOT FOUND")
     updated_user = await update_user(user_id, body, session)
     return updated_user
+
+
+@router.post("/auth", response_model=Token)
+async def login_for_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                          session: Annotated[AsyncSession, Depends(get_session)]):
+    user = await authenticate_user(form_data.username, form_data.password, session)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me")
+async def read_users_me(
+    current_user: Annotated[CreateUser, Depends(get_current_user)]
+):
+    return current_user
