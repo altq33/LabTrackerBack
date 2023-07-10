@@ -1,8 +1,8 @@
-"""DataBase TableCreation
+"""first migration after reinit
 
-Revision ID: 46974c081e4e
-Revises: a286e744d64f
-Create Date: 2023-06-21 20:00:53.620387
+Revision ID: 33089b483a0b
+Revises: 
+Create Date: 2023-07-10 22:33:54.743014
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '46974c081e4e'
-down_revision = 'a286e744d64f'
+revision = '33089b483a0b'
+down_revision = None
 branch_labels = None
 depends_on = None
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, UUID4
@@ -31,6 +32,7 @@ class ShowUser(BaseModel):
 class UserInDB(ShowUser):
     id: UUID
     hashed_password: str
+    roles: list[str]
 
 
 class ShowDeletedUser(BaseModel):
@@ -51,5 +53,14 @@ class Token(BaseModel):
     token_type: str
 
 
+class Roles(str, Enum):
+    user = 'User'
+    admin = 'Admin'
+
+
 class TokenData(BaseModel):
     username: str | None = None
+    roles: list[Roles]
+
+
+

@@ -1,10 +1,13 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, TIMESTAMP, Column, UUID
+from sqlalchemy import String, TIMESTAMP, Column, UUID, ARRAY, MetaData
 
-from src.database import Base, metadata
+from src.auth.schemas import Roles
+from src.database import Base
 
 """DB MODELS"""
+
+metadata = MetaData()
 
 
 class User(Base):
@@ -20,3 +23,4 @@ class User(Base):
     )
     username = Column(String, unique=True, nullable=False)
     created = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
+    roles = Column(ARRAY(String), nullable=False, default=[Roles.user])

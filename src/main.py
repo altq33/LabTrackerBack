@@ -1,5 +1,4 @@
 from fastapi import FastAPI, status
-from fastapi.security import OAuth2PasswordBearer
 
 from src.auth.router import router as auth_router
 

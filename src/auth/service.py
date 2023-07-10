@@ -7,7 +7,7 @@ from sqlalchemy import insert, delete, select, update, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import status, HTTPException, Depends
 from src.auth.schemas import CreateUser, ShowUser, ShowDeletedUser, ShowUpdatedUser, UpdateUserRequest, UserInDB, \
-    TokenData
+    TokenData, Roles
 from src.auth.models import User
 from src.auth.utils import Hasher
 from src.config import settings
@@ -16,7 +16,7 @@ from src.database import get_session
 """Services"""
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/auth")
 
 
 async def create_new_user(user: CreateUser, db_session: AsyncSession) -> ShowUser:
@@ -58,7 +58,7 @@ async def get_user_by_username(username_or_email: str, db_session: AsyncSession)
     selected_user = res.fetchone()[0]
     if selected_user:
         return UserInDB(id=selected_user.id, email=selected_user.email, hashed_password=selected_user.hashed_password,
-                        username=selected_user.username, created=selected_user.created)
+                        username=selected_user.username, created=selected_user.created, roles=selected_user.roles)
 
 
 async def update_user(user_id: UUID, body: UpdateUserRequest, db_session: AsyncSession) -> ShowUpdatedUser | None:
@@ -88,9 +88,10 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
     try:
         payload = jwt.decode(token, settings.secret, algorithms=[settings.algorithm])
         username: str = payload.get("sub")
+        roles: list[Roles] = payload.get("roles")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=username, roles=roles)
     except JWTError:
         raise credentials_exception
     user = await get_user_by_username(token_data.username, db_session)
