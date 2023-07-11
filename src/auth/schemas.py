@@ -7,6 +7,11 @@ from pydantic import BaseModel, EmailStr, UUID4
 """Pydantic модели"""
 
 
+class Roles(str, Enum):
+    user = 'User'
+    admin = 'Admin'
+
+
 class CreateUser(BaseModel):
     username: str
     email: EmailStr
@@ -32,7 +37,7 @@ class ShowUser(BaseModel):
 class UserInDB(ShowUser):
     id: UUID
     hashed_password: str
-    roles: list[str]
+    roles: list[Roles]
 
 
 class ShowDeletedUser(BaseModel):
@@ -51,11 +56,6 @@ class UpdateUserRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
-class Roles(str, Enum):
-    user = 'User'
-    admin = 'Admin'
 
 
 class TokenData(BaseModel):

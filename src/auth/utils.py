@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from jose import jwt
 from passlib.context import CryptContext
 
+from src.auth.schemas import UserInDB, Roles
 from src.config import settings
 
 
@@ -29,4 +30,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
+def check_access_permissions(current: UserInDB, target: UserInDB) -> bool:
+    if current.id == target.id:
+        return True
+    if Roles.admin in current.roles and Roles.admin in target.roles:
+        return False
+    if Roles.admin not in current.roles:
+        return False
+    return True
 
