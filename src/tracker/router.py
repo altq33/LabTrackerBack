@@ -1,0 +1,25 @@
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth.dependencies import get_current_user as auth_get_current_user
+from src.auth.schemas import UserInDB
+from src.database import get_session
+from src.tracker.schemas import TeacherResponse
+from src.tracker.service import get_teacher_by_id
+from src.tracker.utils import check_items_access_permissions
+
+teachers_router = APIRouter(prefix="/teachers", tags=["teachers"])
+
+
+@teachers_router.get("/{teacher_id}", response_model=TeacherResponse)
+async def get_teacher(teacher_id: UUID, session: Annotated[AsyncSession, Depends(get_session)],
+                      current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    teacher = await get_teacher_by_id(teacher_id, session)
+    if not teacher:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher with {teacher_id} id NOT FOUND")
+    if not check_items_access_permissions(current_user, teacher):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    return teacher
