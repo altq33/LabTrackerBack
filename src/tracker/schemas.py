@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, UUID4, Field
-
 
 """Pydantic модели"""
 
@@ -35,7 +35,7 @@ class Task(BaseModel):
 
 class Teacher(BaseModel):
 	id: UUID
-	name: str = Field(max_length=100)
+	name: str
 	surname: str
 	father_name: str | None
 	phone_number: str | None
@@ -45,7 +45,7 @@ class Teacher(BaseModel):
 class Subject(BaseModel):
 	id: UUID
 	name: str
-	course: int | None = Field(gt=0, lt=9)
+	course: int | None
 	teacher_id: UUID
 	user_id: UUID
 
@@ -62,7 +62,30 @@ class TeacherResponse(BaseModel):
 
 
 class CreateTeacher(BaseModel):
+	name: str = Field(max_length=100)
+	surname: str = Field(max_length=100)
+	father_name: str | None = Field(max_length=100)
+	phone_number: str | None = Field(regex=r"^(?:\+7|8)?9\d{9}$")
+
+
+class DeleteTeacher(BaseModel):
+	id: UUID
+
+	class Config:
+		orm_mode = True
+
+
+class CreateSubject(BaseModel):
+	name: str = Field(max_length=100, min_length=3)
+	course: int | None = Field(gt=0, lt=9)
+	teacher_id: UUID
+
+
+class SubjectResponce(BaseModel):
 	name: str
-	surname: str
-	father_name: str | None
-	phone_number: str | None
+	course: int | None
+	teacher: TeacherResponse
+
+	class Congig:
+		orm_mode = True
+

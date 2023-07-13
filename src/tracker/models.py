@@ -35,6 +35,7 @@ class Teacher(Base):
     father_name = Column(String(length=100), nullable=True, default=None)
     phone_number = Column(Text, default=None)
     user_id = Column(UUID(as_uuid=True), ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
+    subjects = relationship("Subject", back_populates="teacher")
 
 
 class Subject(Base):
@@ -46,3 +47,4 @@ class Subject(Base):
     course = Column(SmallInteger, default=None)
     teacher_id = Column(UUID(as_uuid=True), ForeignKey('teachers.id', ondelete='CASCADE'), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
+    teacher = relationship("Teacher", back_populates="subjects", lazy="joined")

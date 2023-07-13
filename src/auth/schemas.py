@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, UUID4
+from pydantic import BaseModel, EmailStr, UUID4, Field
 
 """Pydantic модели"""
 
@@ -13,13 +13,14 @@ class Roles(str, Enum):
 
 
 class CreateUser(BaseModel):
-    username: str
+    username: str = Field(min_length=4, max_length=100, regex=r"^[a-zA-Z0-9_]+$")
     email: EmailStr
-    password: str
+    password: str = Field(min_length=10, max_length=500,
+                          regex=r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).*$")
 
     class Config:
         schema_extra = {
-            "example    ":
+            "example":
                 {
                  "username": "Faker",
                  "email": "thebestmidlaner@gmail.com",
