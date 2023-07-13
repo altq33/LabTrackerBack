@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dependencies import get_current_user as auth_get_current_user
 from src.auth.schemas import UserInDB
 from src.database import get_session
-from src.tracker.schemas import TeacherResponse
-from src.tracker.service import get_teacher_by_id
+from src.tracker.schemas import TeacherResponse, Teacher, CreateTeacher
+from src.tracker.service import get_teacher_by_id, get_teachers_by_user_id, create_teacher_by_user_id
 from src.tracker.utils import check_items_access_permissions
 
 teachers_router = APIRouter(prefix="/teachers", tags=["teachers"])
@@ -23,3 +23,19 @@ async def get_teacher(teacher_id: UUID, session: Annotated[AsyncSession, Depends
     if not check_items_access_permissions(current_user, teacher):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     return teacher
+
+
+@teachers_router.get("/", response_model=list[TeacherResponse])
+async def get_all_teachers(session: Annotated[AsyncSession, Depends(get_session)],
+                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    teachers = await get_teachers_by_user_id(current_user.id, session)
+    if not teachers:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="teachers NOT FOUND")
+    return teachers
+
+
+@teachers_router.post("/", response_model=TeacherResponse)
+async def create_teacher(teacher: CreateTeacher, session: Annotated[AsyncSession, Depends(get_session)],
+                         current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    created_teacher = await create_teacher_by_user_id(current_user.id, teacher, session)
+    return created_teacher

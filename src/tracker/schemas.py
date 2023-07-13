@@ -57,4 +57,12 @@ class TeacherResponse(BaseModel):
 	father_name: str | None
 	phone_number: str | None
 
+	class Config:
+		orm_mode = True
 
+
+class CreateTeacher(BaseModel):
+	name: str
+	surname: str
+	father_name: str | None
+	phone_number: str | None
