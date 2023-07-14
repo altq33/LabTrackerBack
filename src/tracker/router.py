@@ -7,14 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dependencies import get_current_user as auth_get_current_user
 from src.auth.schemas import UserInDB
 from src.database import get_session
-from src.tracker.schemas import TeacherResponse, Teacher, CreateTeacher, DeleteTeacher, SubjectResponce, CreateSubject
+from src.tracker.schemas import TeacherResponse, Teacher, CreateTeacher, DeleteTeacher, SubjectResponse, CreateSubject, \
+    DeleteSubject, UpdateSubject, UpdateSubjectRequest
 from src.tracker.service import get_teacher_by_id, get_teachers_by_user_id, create_teacher_by_user_id, \
-    delete_teacher_by_id, create_subject_by_user_id
+    delete_teacher_by_id, create_subject_by_user_id, get_subjects_by_user_id, get_subject_by_id, delete_subject_by_id, \
+    update_subject_by_id
 from src.tracker.utils import check_items_access_permissions
 
 teachers_router = APIRouter(prefix="/teachers", tags=["teachers"])
 subjects_router = APIRouter(prefix="/subjects", tags=["subjects"])
-
 
 """Teachers CRUD"""
 
@@ -61,9 +62,56 @@ async def delete_teacher(teacher_id: UUID, session: Annotated[AsyncSession, Depe
 """Subjects CRUD"""
 
 
-@subjects_router.post("/", response_model=SubjectResponce)
+@subjects_router.post("/", response_model=SubjectResponse)
 async def create_subject(subject: CreateSubject, session: Annotated[AsyncSession, Depends(get_session)],
                          current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
     created_subject = await create_subject_by_user_id(current_user.id, subject, session)
-
     return created_subject
+
+
+@subjects_router.get("/", response_model=list[SubjectResponse])
+async def get_all_subjects(session: Annotated[AsyncSession, Depends(get_session)],
+                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    subjects = await get_subjects_by_user_id(current_user.id, session)
+    if not subjects:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="subjects NOT FOUND")
+    return subjects
+
+
+@subjects_router.get("/{subject_id}", response_model=SubjectResponse)
+async def get_subject(subject_id: UUID, session: Annotated[AsyncSession, Depends(get_session)],
+                      current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    subject = await get_subject_by_id(subject_id, session)
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"subject with {subject_id} id NOT FOUND")
+    if not check_items_access_permissions(current_user, subject):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    return subject
+
+
+@subjects_router.delete("/{subject_id}", response_model=DeleteSubject)
+async def delete_subject(subject_id: UUID, session: Annotated[AsyncSession, Depends(get_session)],
+                         current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    subject = await get_subject_by_id(subject_id, session)
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"subject with {subject_id} id NOT FOUND")
+    if not check_items_access_permissions(current_user, subject):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    deleted_subject = await delete_subject_by_id(subject_id, session)
+    return deleted_subject
+
+
+@subjects_router.patch("/{subject_id}", response_model=UpdateSubject)
+async def update_subject(subject_id: UUID,
+                         body: UpdateSubjectRequest,
+                         session: Annotated[AsyncSession, Depends(get_session)],
+                         current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
+    subject = await get_subject_by_id(subject_id, session)
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"subject with {subject_id} id NOT FOUND")
+    if not check_items_access_permissions(current_user, subject):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    updated_subject = await update_subject_by_id(subject_id, body, session)
+    return updated_subject
+
+

@@ -1,11 +1,12 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select, RowMapping, Row, insert, delete, and_
+from sqlalchemy import select, RowMapping, Row, insert, delete, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from src.tracker.schemas import Teacher, CreateTeacher, CreateSubject, TeacherResponse, SubjectResponce
+from src.tracker.schemas import Teacher, CreateTeacher, CreateSubject, TeacherResponse, SubjectResponse, \
+	UpdateSubjectRequest
 from src.tracker.models import Teacher as TeacherDB
 from src.tracker.models import Subject as SubjectDB
 
@@ -58,6 +59,40 @@ async def create_subject_by_user_id(user_id: UUID, subject: CreateSubject, db_se
 	query = select(SubjectDB).where(SubjectDB.id == subject_row.id)
 	res = await db_session.execute(query)
 	subject_row = res.scalars().one()
-	subject_row.teacher = TeacherResponse.from_orm(subject_row.teacher)
-	subject_row = SubjectResponce.from_orm(subject_row)
 	return subject_row
+
+
+async def get_subjects_by_user_id(user_id: UUID, db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
+	query = select(SubjectDB).where(SubjectDB.user_id == user_id)
+	res = await db_session.execute(query)
+	subjects_rows = res.scalars().all()
+	if subjects_rows:
+		return subjects_rows
+
+
+async def get_subject_by_id(subject_id, db_session: AsyncSession) -> Row | RowMapping | None:
+	query = select(SubjectDB).where(SubjectDB.id == subject_id)
+	res = await db_session.execute(query)
+	subject_row = res.scalars().one_or_none()
+	if subject_row:
+		return subject_row
+
+
+async def delete_subject_by_id(subject_id: UUID, db_session: AsyncSession):
+	query = delete(SubjectDB).where(SubjectDB.id == subject_id).returning(SubjectDB)
+	res = await db_session.execute(query)
+	await db_session.commit()
+	deleted_subject_row = res.scalars().one()
+	if deleted_subject_row:
+		return deleted_subject_row
+
+
+async def update_subject_by_id(subject_id: UUID, body: UpdateSubjectRequest, db_session: AsyncSession):
+	query = update(SubjectDB).where(SubjectDB.id == subject_id)\
+			.values(**body.dict(exclude_none=True))\
+			.returning(SubjectDB)
+	res = await db_session.execute(query)
+	updated_subject_row = res.scalars().one()
+	await db_session.commit()
+	return updated_subject_row
+

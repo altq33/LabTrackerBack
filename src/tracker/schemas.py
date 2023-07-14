@@ -80,12 +80,32 @@ class CreateSubject(BaseModel):
 	course: int | None = Field(gt=0, lt=9)
 	teacher_id: UUID
 
+	class Congig:
+		orm_mode = True
 
-class SubjectResponce(BaseModel):
+
+class SubjectResponse(BaseModel):
+	id: UUID
 	name: str
 	course: int | None
 	teacher: TeacherResponse
 
-	class Congig:
+	class Config:
 		orm_mode = True
 
+
+class DeleteSubject(BaseModel):
+	id: UUID
+
+	class Config:
+		orm_mode = True
+
+
+class UpdateSubject(SubjectResponse):
+	pass
+
+
+class UpdateSubjectRequest(BaseModel):
+	name: str | None
+	course: int | None
+	teacher_id: UUID | None
