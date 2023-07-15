@@ -88,7 +88,7 @@ class SubjectResponse(BaseModel):
 	id: UUID
 	name: str
 	course: int | None
-	teacher: TeacherResponse
+	teacher: TeacherResponse | None
 
 	class Config:
 		orm_mode = True
