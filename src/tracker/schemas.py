@@ -18,7 +18,7 @@ class TasksTypes(str, Enum):
 
 class Priority(str, Enum):
 	standart = "Standart"
-	meduim = "Meduim"
+	medium = "Medium"
 	high = "High"
 
 
@@ -29,6 +29,7 @@ class Task(BaseModel):
 	description: str | None
 	type: TasksTypes | None
 	priority: Priority
+	status: bool = False
 	user_id: UUID
 	subject_id: UUID
 
@@ -46,7 +47,7 @@ class Subject(BaseModel):
 	id: UUID
 	name: str
 	course: int | None
-	teacher_id: UUID
+	teacher_id: UUID | None
 	user_id: UUID
 
 
@@ -109,3 +110,47 @@ class UpdateSubjectRequest(BaseModel):
 	name: str | None
 	course: int | None
 	teacher_id: UUID | None
+
+
+class TaskResponse(BaseModel):
+	id: UUID
+	name: str
+	deadline: datetime | None
+	description: str | None
+	type: TasksTypes | None
+	priority: Priority
+	status: bool
+	subject: SubjectResponse
+
+	class Config:
+		orm_mode = True
+
+
+class CreateTask(BaseModel):
+	name: str = Field(max_length=100)
+	deadline: datetime | None
+	description: str | None
+	type: TasksTypes | None
+	priority: Priority
+	subject_id: UUID
+
+
+class DeleteTask(BaseModel):
+	id: UUID
+
+	class Config:
+		orm_mode = True
+
+
+class UpdateTaskRequest(BaseModel):
+	name: str | None = Field(max_length=100)
+	deadline: datetime | None
+	description: str | None
+	type: TasksTypes | None
+	status: bool | None  # Possible that this row drop my nervous system if future
+	priority: Priority | None
+	subject_id: UUID | None
+
+
+class UpdateTask(TaskResponse):
+	pass

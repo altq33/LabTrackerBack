@@ -3,12 +3,13 @@ from uuid import UUID
 
 from sqlalchemy import select, RowMapping, Row, insert, delete, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from src.tracker.schemas import Teacher, CreateTeacher, CreateSubject, TeacherResponse, SubjectResponse, \
-	UpdateSubjectRequest
+	UpdateSubjectRequest, CreateTask, UpdateTaskRequest
 from src.tracker.models import Teacher as TeacherDB
 from src.tracker.models import Subject as SubjectDB
+from src.tracker.models import Task as TaskDB
 
 
 async def get_teacher_by_id(teacher_id: UUID, db_session: AsyncSession) -> Teacher | None:
@@ -93,6 +94,50 @@ async def update_subject_by_id(subject_id: UUID, body: UpdateSubjectRequest, db_
 			.returning(SubjectDB)
 	res = await db_session.execute(query)
 	updated_subject_row = res.scalars().one()
+	await db_session.refresh(updated_subject_row)
 	await db_session.commit()
 	return updated_subject_row
 
+
+async def create_task_by_user_id(user_id: UUID, task: CreateTask, db_session: AsyncSession):
+	query = insert(TaskDB).values(**task.dict(), user_id=user_id).returning(TaskDB)
+	res = await db_session.execute(query)
+	await db_session.commit()
+	teacher_row = res.scalars().one()
+	return teacher_row
+
+
+async def get_tasks_by_user_id(user_id: UUID, db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
+	query = select(TaskDB).where(TaskDB.user_id == user_id)
+	res = await db_session.execute(query)
+	tasks_rows = res.scalars().all()
+	if tasks_rows:
+		return tasks_rows
+
+
+async def get_task_by_id(task_id, db_session: AsyncSession) -> Row | RowMapping | None:
+	query = select(TaskDB).where(TaskDB.id == task_id)
+	res = await db_session.execute(query)
+	task_row = res.scalars().one_or_none()
+	if task_row:
+		return task_row
+
+
+async def delete_task_by_id(task_id: UUID, db_session: AsyncSession):
+	query = delete(TaskDB).where(TaskDB.id == task_id).returning(TaskDB)
+	res = await db_session.execute(query)
+	await db_session.commit()
+	deleted_task_row = res.scalars().one()
+	if deleted_task_row:
+		return deleted_task_row
+
+
+async def update_task_by_id(task_id: UUID, body: UpdateTaskRequest, db_session: AsyncSession):
+	query = update(TaskDB).where(TaskDB.id == task_id)\
+			.values(**body.dict(exclude_none=True))\
+			.returning(TaskDB)
+	res = await db_session.execute(query)
+	updated_task_row = res.scalars().one()
+	await db_session.refresh(updated_task_row)
+	await db_session.commit()
+	return updated_task_row
