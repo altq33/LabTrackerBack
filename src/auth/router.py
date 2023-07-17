@@ -27,7 +27,7 @@ async def registration(user: Annotated[CreateUser, Body(title='Registration body
     return new_user
 
 
-@router.delete("/{user_id}", response_model=ShowDeletedUser, dependencies=[Depends(check_user_id), Depends(check_access)])
+@router.delete("/{user_id}", response_model=ShowDeletedUser, dependencies=[Depends(check_access)])
 async def delete_user(user_id: UUID, session: Annotated[AsyncSession, Depends(get_session)]) -> ShowDeletedUser:
     deleted_user = await delete_user_by_id(user_id, session)
     return deleted_user
@@ -46,7 +46,7 @@ async def get_user(user_id: UUID, session: AsyncSession = Depends(get_session)) 
     return user
 
 
-@router.patch("/{user_id}", response_model=ShowUpdatedUser, dependencies=[Depends(check_user_id), Depends(check_access)])
+@router.patch("/{user_id}", response_model=ShowUpdatedUser, dependencies=[Depends(check_access)])
 async def update_user_by_id(user_id: UUID, body: UpdateUserRequest,
                             session: Annotated[AsyncSession, Depends(get_session)],
                             ) -> ShowUpdatedUser:

@@ -139,5 +139,5 @@ async def update_task_by_id(task_id: UUID, body: UpdateTaskRequest, db_session: 
 	res = await db_session.execute(query)
 	updated_task_row = res.scalars().one()
 	await db_session.refresh(updated_task_row)
-	await db_session.commit()
+	await db_session.commit()   
 	return updated_task_row
