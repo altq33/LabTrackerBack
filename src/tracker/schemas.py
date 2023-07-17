@@ -1,9 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, UUID4, Field
+from pydantic import BaseModel, Field
 
 """Pydantic модели"""
 
@@ -90,6 +89,7 @@ class SubjectResponse(BaseModel):
 	name: str
 	course: int | None
 	teacher: TeacherResponse | None
+	task_count: int | None
 
 	class Config:
 		orm_mode = True
@@ -154,3 +154,15 @@ class UpdateTaskRequest(BaseModel):
 
 class UpdateTask(TaskResponse):
 	pass
+
+
+class TeacherSorts(str, Enum):
+	by_name = "name"
+	by_surname = 'surname'
+	by_father_name = 'father_name'
+
+
+class SubjectSorts(str, Enum):
+	by_name = "name"
+	by_course = 'course'
+	by_tasks_count = 'tasks_count'

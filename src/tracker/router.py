@@ -1,22 +1,24 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import get_current_user as auth_get_current_user
 from src.auth.schemas import UserInDB
 from src.database import get_session
 from src.exceptions import not_found_exception, empty_body_exception
-from src.tracker.dependencies import check_teacher_id, check_access_to_teachers, check_subject_id, \
-	check_access_to_subjects, check_task_id, check_access_to_tasks
-from src.tracker.schemas import TeacherResponse, CreateTeacher, DeleteTeacher, SubjectResponse, CreateSubject, \
-	DeleteSubject, UpdateSubject, UpdateSubjectRequest, CreateTask, TaskResponse, DeleteTask, UpdateTaskRequest, \
-	UpdateTask, Teacher, Subject, Task
-from src.tracker.service import get_teachers_by_user_id, create_teacher_by_user_id, \
-	delete_teacher_by_id, create_subject_by_user_id, get_subjects_by_user_id, delete_subject_by_id, \
-	update_subject_by_id, create_task_by_user_id, get_tasks_by_user_id, delete_task_by_id, \
-	update_task_by_id
+from src.tracker.dependencies import (check_teacher_id, check_access_to_teachers, check_subject_id,
+                                      check_access_to_subjects, check_task_id, check_access_to_tasks)
+from src.tracker.schemas import (TeacherResponse, CreateTeacher, DeleteTeacher, SubjectResponse, CreateSubject,
+                                 DeleteSubject, UpdateSubject, UpdateSubjectRequest, CreateTask, TaskResponse,
+                                 DeleteTask, UpdateTaskRequest,
+                                 UpdateTask, Teacher, Subject, Task, TeacherSorts, SubjectSorts)
+from src.tracker.service import (get_teachers_by_user_id, create_teacher_by_user_id,
+                                 delete_teacher_by_id, create_subject_by_user_id, get_subjects_by_user_id,
+                                 delete_subject_by_id,
+                                 update_subject_by_id, create_task_by_user_id, get_tasks_by_user_id, delete_task_by_id,
+                                 update_task_by_id)
 
 teachers_router = APIRouter(prefix="/teachers", tags=["teachers"])
 subjects_router = APIRouter(prefix="/subjects", tags=["subjects"])
@@ -32,8 +34,10 @@ async def get_teacher(teacher: Annotated[Teacher, Depends(check_teacher_id)]):
 
 @teachers_router.get("/", response_model=list[TeacherResponse])
 async def get_all_teachers(session: Annotated[AsyncSession, Depends(get_session)],
-                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
-	teachers = await get_teachers_by_user_id(current_user.id, session)
+                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)],
+                           sort: Annotated[TeacherSorts | None, Query()] = None,
+                           desc: Annotated[bool, Query()] = False):
+	teachers = await get_teachers_by_user_id(current_user.id, sort, desc, session)
 	if not teachers:
 		raise not_found_exception
 	return teachers
@@ -64,8 +68,10 @@ async def create_subject(subject: CreateSubject, session: Annotated[AsyncSession
 
 @subjects_router.get("/", response_model=list[SubjectResponse])
 async def get_all_subjects(session: Annotated[AsyncSession, Depends(get_session)],
-                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
-	subjects = await get_subjects_by_user_id(current_user.id, session)
+                           current_user: Annotated[UserInDB, Depends(auth_get_current_user)],
+                           sort: Annotated[SubjectSorts | None, Query()] = None,
+                           desc: Annotated[bool, Query()] = False):
+	subjects = await get_subjects_by_user_id(current_user.id, sort, desc, session)
 	if not subjects:
 		raise not_found_exception
 	return subjects
@@ -90,6 +96,7 @@ async def update_subject(subject_id: UUID,
 		raise empty_body_exception
 	updated_subject = await update_subject_by_id(subject_id, body, session)
 	return updated_subject
+
 
 """Tasks CRUD"""
 

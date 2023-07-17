@@ -49,5 +49,5 @@ class Subject(Base):
     course = Column(SmallInteger, default=None)
     teacher_id = Column(UUID(as_uuid=True), ForeignKey('teachers.id', ondelete='SET NULL'))
     user_id = Column(UUID(as_uuid=True), ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
-    teacher = relationship("Teacher", back_populates="subjects", lazy="joined")
-    tasks = relationship("Task", back_populates="subject")
+    teacher = relationship("Teacher", back_populates="subjects", lazy="selectin")
+    tasks = relationship("Task", back_populates="subject", lazy="selectin")

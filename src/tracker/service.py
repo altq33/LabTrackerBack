@@ -1,15 +1,14 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select, RowMapping, Row, insert, delete, and_, update
+from sqlalchemy import select, RowMapping, Row, insert, delete, update, desc, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
 
-from src.tracker.schemas import Teacher, CreateTeacher, CreateSubject, TeacherResponse, SubjectResponse, \
-	UpdateSubjectRequest, CreateTask, UpdateTaskRequest
-from src.tracker.models import Teacher as TeacherDB
 from src.tracker.models import Subject as SubjectDB
 from src.tracker.models import Task as TaskDB
+from src.tracker.models import Teacher as TeacherDB
+from src.tracker.schemas import (Teacher, CreateTeacher, CreateSubject, UpdateSubjectRequest, CreateTask,
+                                 UpdateTaskRequest, TeacherSorts, SubjectSorts)
 
 
 async def get_teacher_by_id(teacher_id: UUID, db_session: AsyncSession) -> Teacher | None:
@@ -25,8 +24,13 @@ async def get_teacher_by_id(teacher_id: UUID, db_session: AsyncSession) -> Teach
 		               user_id=teacher_row[0].user_id)
 
 
-async def get_teachers_by_user_id(user_id: UUID, db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
+async def get_teachers_by_user_id(user_id: UUID, sort: TeacherSorts | None, descending: bool,
+                                  db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
 	query = select(TeacherDB).where(TeacherDB.user_id == user_id)
+	if sort is not None and descending:
+		query = query.order_by(desc(getattr(TeacherDB, sort)))
+	elif sort is not None:
+		query = query.order_by(getattr(TeacherDB, sort))
 	res = await db_session.execute(query)
 	teachers_rows = res.scalars().fetchall()
 	if teachers_rows:
@@ -63,12 +67,17 @@ async def create_subject_by_user_id(user_id: UUID, subject: CreateSubject, db_se
 	return subject_row
 
 
-async def get_subjects_by_user_id(user_id: UUID, db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
-	query = select(SubjectDB).where(SubjectDB.user_id == user_id)
+async def get_subjects_by_user_id(user_id: UUID, sort: SubjectSorts | None, descending: bool,
+                                  db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
+	query = select(SubjectDB, func.count(TaskDB.subject_id).label('task_count')) \
+		.outerjoin(TaskDB, SubjectDB.id == TaskDB.subject_id)\
+		.group_by(SubjectDB.id) \
+		.order_by(desc('task_count'))
 	res = await db_session.execute(query)
-	subjects_rows = res.scalars().all()
-	if subjects_rows:
-		return subjects_rows
+	subjects = res.scalars().all()
+
+	if subjects:
+		return subjects
 
 
 async def get_subject_by_id(subject_id, db_session: AsyncSession) -> Row | RowMapping | None:
@@ -139,5 +148,5 @@ async def update_task_by_id(task_id: UUID, body: UpdateTaskRequest, db_session: 
 	res = await db_session.execute(query)
 	updated_task_row = res.scalars().one()
 	await db_session.refresh(updated_task_row)
-	await db_session.commit()   
+	await db_session.commit()
 	return updated_task_row
