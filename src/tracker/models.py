@@ -24,7 +24,7 @@ class Task(Base):
     status = Column(Boolean, default=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey(User.id, ondelete='CASCADE', ), nullable=False)
     subject_id = Column(UUID(as_uuid=True), ForeignKey('subjects.id', ondelete='CASCADE'), nullable=False)
-    subject = relationship("Subject", back_populates="tasks", lazy="joined")
+    subject = relationship("Subject", back_populates="tasks", lazy="selectin")
 
 
 class Teacher(Base):
