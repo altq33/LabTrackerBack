@@ -89,7 +89,7 @@ class SubjectResponse(BaseModel):
 	name: str
 	course: int | None
 	teacher: TeacherResponse | None
-	task_count: int | None
+	tasks_count: int | None
 
 	class Config:
 		orm_mode = True
