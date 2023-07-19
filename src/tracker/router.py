@@ -13,7 +13,7 @@ from src.tracker.dependencies import (check_teacher_id, check_access_to_teachers
 from src.tracker.schemas import (TeacherResponse, CreateTeacher, DeleteTeacher, SubjectResponse, CreateSubject,
                                  DeleteSubject, UpdateSubject, UpdateSubjectRequest, CreateTask, TaskResponse,
                                  DeleteTask, UpdateTaskRequest,
-                                 UpdateTask, Teacher, Subject, Task, TeacherSorts, SubjectSorts)
+                                 UpdateTask, Teacher, Subject, Task, TeacherSorts, SubjectSorts, TaskSorts)
 from src.tracker.service import (get_teachers_by_user_id, create_teacher_by_user_id,
                                  delete_teacher_by_id, create_subject_by_user_id, get_subjects_by_user_id,
                                  delete_subject_by_id,
@@ -109,9 +109,13 @@ async def create_task(task: CreateTask, session: Annotated[AsyncSession, Depends
 
 
 @tasks_router.get("/", response_model=list[TaskResponse])
-async def get_all_tasks(session: Annotated[AsyncSession, Depends(get_session)],
-                        current_user: Annotated[UserInDB, Depends(auth_get_current_user)]):
-    tasks = await get_tasks_by_user_id(current_user.id, session)
+async def get_all_tasks(
+                        session: Annotated[AsyncSession, Depends(get_session)],
+                        current_user: Annotated[UserInDB, Depends(auth_get_current_user)],
+                        sort: Annotated[TaskSorts | None, Query()] = None,
+                        desc: Annotated[bool, Query()] = False
+                        ):
+    tasks = await get_tasks_by_user_id(current_user.id, sort, desc, session)
     if not tasks:
         raise not_found_exception
     return tasks

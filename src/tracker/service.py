@@ -1,14 +1,14 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select, RowMapping, Row, insert, delete, update, desc, func, text
+from sqlalchemy import select, RowMapping, Row, insert, delete, update, desc, func, text, case, literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.tracker.models import Subject as SubjectDB
 from src.tracker.models import Task as TaskDB
 from src.tracker.models import Teacher as TeacherDB
 from src.tracker.schemas import (Teacher, CreateTeacher, CreateSubject, UpdateSubjectRequest, CreateTask,
-                                 UpdateTaskRequest, TeacherSorts, SubjectSorts)
+                                 UpdateTaskRequest, TeacherSorts, SubjectSorts, TaskSorts)
 
 
 async def get_teacher_by_id(teacher_id: UUID, db_session: AsyncSession) -> Teacher | None:
@@ -132,8 +132,35 @@ async def create_task_by_user_id(user_id: UUID, task: CreateTask, db_session: As
     return teacher_row
 
 
-async def get_tasks_by_user_id(user_id: UUID, db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
+async def get_tasks_by_user_id(user_id: UUID, sort: TaskSorts | None, descending: bool,
+                               db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
     query = select(TaskDB).where(TaskDB.user_id == user_id)
+    match sort:
+        case TaskSorts.by_priority:
+            if descending:
+                query = query.order_by(desc(
+                    case(
+                        (TaskDB.priority == 'Low', literal(1)),
+                        (TaskDB.priority == 'Medium', literal(2)),
+                        (TaskDB.priority == 'High', literal(3))
+                    )
+                ))
+            else:
+                query = query.order_by(
+                    case(
+                        (TaskDB.priority == 'Low', literal(1)),
+                        (TaskDB.priority == 'Medium', literal(2)),
+                        (TaskDB.priority == 'High', literal(3))
+                    )
+                )
+        case None:
+            pass
+        case _:
+            if descending:
+                query = query.order_by(desc(getattr(TaskDB, sort)))
+            else:
+                query = query.order_by(getattr(TaskDB, sort))
+
     res = await db_session.execute(query)
     tasks_rows = res.scalars().all()
     if tasks_rows:

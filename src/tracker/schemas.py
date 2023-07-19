@@ -16,7 +16,7 @@ class TasksTypes(str, Enum):
 
 
 class Priority(str, Enum):
-	standart = "Standart"
+	low = "Low"
 	medium = "Medium"
 	high = "High"
 
@@ -84,12 +84,26 @@ class CreateSubject(BaseModel):
 		orm_mode = True
 
 
+class InnerSubjectTaskResponse(BaseModel):
+	id: UUID
+	name: str
+	deadline: datetime | None
+	description: str | None
+	type: TasksTypes | None
+	priority: Priority
+	status: bool
+
+	class Config:
+		orm_mode = True
+
+
 class SubjectResponse(BaseModel):
 	id: UUID
 	name: str
 	course: int | None
 	teacher: TeacherResponse | None
 	tasks_count: int | None
+	tasks: list[InnerSubjectTaskResponse]
 
 	class Config:
 		orm_mode = True
@@ -166,3 +180,11 @@ class SubjectSorts(str, Enum):
 	by_name = "name"
 	by_course = 'course'
 	by_tasks_count = 'tasks_count'
+
+
+class TaskSorts(str, Enum):
+	by_name = "name"
+	by_deadline = "deadline"
+	by_type = "type"
+	by_priority = "priority"
+	by_status = "status"
