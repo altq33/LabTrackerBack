@@ -8,7 +8,7 @@ from src.tracker.models import Subject as SubjectDB
 from src.tracker.models import Task as TaskDB
 from src.tracker.models import Teacher as TeacherDB
 from src.tracker.schemas import (Teacher, CreateTeacher, CreateSubject, UpdateSubjectRequest, CreateTask,
-                                 UpdateTaskRequest, TeacherSorts, SubjectSorts, TaskSorts)
+                                 UpdateTaskRequest, TeacherSorts, SubjectSorts, TaskSorts, Priority, TasksTypes)
 
 
 async def get_teacher_by_id(teacher_id: UUID, db_session: AsyncSession) -> Teacher | None:
@@ -133,8 +133,17 @@ async def create_task_by_user_id(user_id: UUID, task: CreateTask, db_session: As
 
 
 async def get_tasks_by_user_id(user_id: UUID, sort: TaskSorts | None, descending: bool,
+                               priority: Priority | None,
+                               task_type: TasksTypes | None,
+                               include_expired: bool | None, 
                                db_session: AsyncSession) -> Sequence[Row | RowMapping] | None:
     query = select(TaskDB).where(TaskDB.user_id == user_id)
+    if not include_expired and include_expired is not None:
+        query = query.where(TaskDB.deadline > func.now())
+    if priority:
+        query = query.where(TaskDB.priority == priority)
+    if task_type:
+        query = query.where(TaskDB.type == task_type)
     match sort:
         case TaskSorts.by_priority:
             if descending:

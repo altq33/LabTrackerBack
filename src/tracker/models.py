@@ -20,7 +20,7 @@ class Task(Base):
     deadline = Column(TIMESTAMP(timezone=True), default=None)
     description = Column(Text, default=None)
     type = Column(String, default=None)
-    priority = Column(String, default="Standart")
+    priority = Column(String, default="Low")
     status = Column(Boolean, default=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey(User.id, ondelete='CASCADE', ), nullable=False)
     subject_id = Column(UUID(as_uuid=True), ForeignKey('subjects.id', ondelete='CASCADE'), nullable=False)

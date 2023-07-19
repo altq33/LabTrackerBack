@@ -126,6 +126,16 @@ class UpdateSubjectRequest(BaseModel):
 	teacher_id: UUID | None
 
 
+class InnerTaskSubjectResponse(BaseModel):
+	id: UUID
+	name: str
+	course: int | None
+	teacher: TeacherResponse | None
+
+	class Config:
+		orm_mode = True
+
+
 class TaskResponse(BaseModel):
 	id: UUID
 	name: str
@@ -134,7 +144,7 @@ class TaskResponse(BaseModel):
 	type: TasksTypes | None
 	priority: Priority
 	status: bool
-	subject: SubjectResponse
+	subject: InnerTaskSubjectResponse
 
 	class Config:
 		orm_mode = True
