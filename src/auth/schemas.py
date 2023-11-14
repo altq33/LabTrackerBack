@@ -36,6 +36,8 @@ class ShowUser(BaseModel):
 
 
 class UserInDB(ShowUser):
+    username: str
+    email: EmailStr
     id: UUID
     hashed_password: str
     roles: list[Roles]
@@ -57,6 +59,7 @@ class UpdateUserRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: ShowUser
 
 
 class TokenData(BaseModel):

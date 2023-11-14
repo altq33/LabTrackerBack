@@ -1,4 +1,5 @@
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.router import router as auth_router
 from src.tracker.router import teachers_router as tracker_teachers_router
@@ -11,6 +12,19 @@ app.include_router(auth_router)
 app.include_router(tracker_teachers_router)
 app.include_router(tracker_subjects_router)
 app.include_router(tracker_tasks_router)
+
+origins = [
+    "http://localhost:5173",
+    "http://localhost",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/", status_code=status.HTTP_200_OK)
