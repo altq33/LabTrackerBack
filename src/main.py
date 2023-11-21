@@ -16,6 +16,8 @@ app.include_router(tracker_tasks_router)
 origins = [
     "http://localhost:5173",
     "http://localhost",
+    "http://192.168.1.67:5173",
+    "http://192.168.1.67"
 ]
 
 app.add_middleware(

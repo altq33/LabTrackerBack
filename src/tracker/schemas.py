@@ -78,7 +78,7 @@ class DeleteTeacher(BaseModel):
 class CreateSubject(BaseModel):
 	name: str = Field(max_length=100, min_length=3)
 	course: int | None = Field(gt=0, lt=9)
-	teacher_id: UUID
+	teacher_id: UUID | None
 
 	class Congig:
 		orm_mode = True
