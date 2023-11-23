@@ -7,7 +7,7 @@
 1. Клонируйте репозиторий:
 
    
-   git clone https://github.com/your-username/fastapi-project.git
+   git clone https://github.com/altq33/LabTrackerBack.git
    
 
 2. Перейдите в директорию проекта:
@@ -16,7 +16,7 @@
    cd fastapi-project
    
 
-3. Установите зависимости проекта с помощью Poetry (если Poetry еще не установлен):
+3. Установите зависимости проекта с помощью Poetry (если Poetry еще не установлен) или через requerments.txt:
 
    
    poetry install
